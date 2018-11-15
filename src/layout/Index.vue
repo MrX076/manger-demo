@@ -6,7 +6,7 @@
         <!-- 头部左侧 -->
         <div>
           <div class="header-item" style="width: 202px; text-align: center;">
-            <i class="fas fa-city" style="font-size: 18px;"></i>
+            <i class="fab fa-vuejs" style="font-size: 24px; vertical-align: sub;"></i>
             管理系统
           </div>
           <div class="header-item on-focus" tabindex="0">
