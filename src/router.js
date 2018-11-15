@@ -13,7 +13,7 @@ export const menuRouters = [{
   path: '/user',
   name: 'User',
   redirect: '/user/list',
-  meta: { title: '用户', icon: 'fas fa-users' },
+  meta: { title: '用户', icon: 'fas fa-users', permissions: 'ADMIN' },
   children: [{
     path: '/user/list',
     name: 'UserList',
@@ -36,7 +36,12 @@ export const otherRouters = [{
   path: '/login',
   name: 'Login',
   component: () => import(/* webpackChunkName: "login" */ './views/Login'),
-  meta: { title: '登录', noTab: true }
+  meta: { title: '登录', noTab: true, auth: false }
+}, {
+  path: '/e403',
+  name: 'E403',
+  component: () => import(/* webpackChunkName: "error" */ './views/errors/E403'),
+  meta: { title: '没有权限', noTab: true, auth: false }
 }]
 
 function filterComponentRouter (routers) {
@@ -63,6 +68,11 @@ export default new Router({
       redirect: '/',
       component: Layout,
       children: filterComponentRouter(menuRouters)
+    }, {
+      path: '*',
+      name: 'E404',
+      component: () => import(/* webpackChunkName: "error" */ './views/errors/E404'),
+      meta: { title: '页面不存在', noTab: true, auth: false }
     }
   ]
 })

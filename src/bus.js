@@ -1,6 +1,42 @@
 import router from './router'
 import store from './store'
 
+export const hasPermission = value => {
+  const userPermissions = store.getters.userPermissions
+  if (!userPermissions) return false
+  if (!value || value.length === 0) return true
+  if (!userPermissions.length) return false
+
+  let permissions
+  if (typeof value === 'string') {
+    permissions = value.split(',')
+  } else if (Array.isArray(value)) {
+    permissions = value
+  } else {
+    throw new Error('指定的权限必须是一个数组或者以英文逗号分隔的字符串')
+  }
+
+  return userPermissions.some(i => permissions.includes(i))
+}
+
+export const isRole = value => {
+  const userRoles = store.getters.userRoles
+  if (!userRoles) return false
+  if (!value || value.length === 0) return true
+  if (!userRoles.length) return false
+
+  let roles
+  if (typeof value === 'string') {
+    roles = value.split(',')
+  } else if (Array.isArray(value)) {
+    roles = value
+  } else {
+    throw new Error('指定的角色必须是一个数组或者以英文逗号分隔的字符串')
+  }
+
+  return userRoles.some(i => roles.includes(i))
+}
+
 router.beforeEach((to, from, next) => {
   // TODO: 目标页面权限检查
   let user = store.state.user
@@ -8,12 +44,15 @@ router.beforeEach((to, from, next) => {
     next({ name: 'Home' })
     return
   }
-  if (to.name !== 'Login' && !user) {
+  const meta = to.meta
+  // 检查用户登录
+  if (!user && (!meta || meta.auth !== false)) {
     if (localStorage.user) {
       try {
         user = JSON.parse(localStorage.user)
         store.commit('setUser', user)
       } catch (e) {
+        console.log(e)
         localStorage.removeItem('user')
       }
     }
@@ -22,9 +61,14 @@ router.beforeEach((to, from, next) => {
       return
     }
   }
-  let meta = to.meta
+  // 检查用户权限
+  if (user && (!isRole(meta.roles) || !hasPermission(meta.permissions))) {
+    next({ name: 'E403' })
+    return
+  }
+  // 浏览器标题显示
   if (meta && meta.title) {
-    document.title = '管理平台 - ' + to.meta.title
+    document.title = '管理平台 - ' + meta.title
   } else {
     document.title = '管理平台'
   }
@@ -34,8 +78,72 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
+// 菜单过滤
+export const filterMenus = menus => {
+  let ms = []
+  for (let m of menus) {
+    let auth = !m.meta || m.meta.auth !== false
+    let roles = (m.meta && m.meta.roles) || []
+    let permissions = (m.meta && m.meta.permissions) || []
+    if (auth && isRole(roles) && hasPermission(permissions)) {
+      if (m.children && m.children.length) {
+        m.children = filterMenus(m.children)
+        if (m.children.length) {
+          ms.push(m)
+        }
+      } else {
+        ms.push(m)
+      }
+    }
+  }
+  return ms
+}
+
+// 全局事件处理
 export const eventBus = function (app) {
   app.$on('userNeedLogin', () => {
     router.push({ name: 'Login' })
   })
+}
+
+// 权限指令
+export const authDirectives = {
+  install (Vue) {
+    Object.defineProperties(Vue, {
+      '$auth': {
+        get () {
+          return hasPermission
+        }
+      },
+      '$role': {
+        get () {
+          return isRole
+        }
+      }
+    })
+    // 权限判断指令
+    Vue.directive('auth', (el, binding, vnode) => {
+      const { value } = binding
+
+      if (vnode.context.$route.meta.auth !== false && !hasPermission(value)) {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el)
+        } else {
+          el.style.display = 'none'
+        }
+      }
+    })
+    // 角色判断指令
+    Vue.directive('role', (el, binding, vnode) => {
+      const { value } = binding
+
+      if (vnode.context.$route.meta.auth !== false && !isRole(value)) {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el)
+        } else {
+          el.style.display = 'none'
+        }
+      }
+    })
+  }
 }

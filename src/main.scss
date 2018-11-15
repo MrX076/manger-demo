@@ -56,3 +56,19 @@ a {
     background: #EDEDED;
   }
 }
+
+.error-page {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  &-container {
+    width: 360px;
+    h3 {
+      color: red;
+    }
+    p {
+      font-size: 13px;
+    }
+  }
+}

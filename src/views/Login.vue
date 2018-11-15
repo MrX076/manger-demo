@@ -46,8 +46,10 @@ export default {
     doLogin () {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          this.$store.dispatch('doUserLogin').then(() => {
+          this.$store.dispatch('doUserLogin', this.loginData).then(() => {
             this.$router.push({ name: 'Home' })
+          }).catch(e => {
+            this.$message({ showClose: true, message: e.message, type: 'error' })
           })
         }
       })

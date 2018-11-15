@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { menuRouters } from './router'
+import { filterMenus } from './bus'
 
 Vue.use(Vuex)
 
@@ -15,6 +16,12 @@ export default new Vuex.Store({
   getters: {
     aliveTabs (state) {
       return state.openTabs.filter(i => i.meta && i.meta.keepalive).map(i => i.name)
+    },
+    userPermissions (state) {
+      return state.user ? (Array.isArray(state.user.permissions) ? state.user.permissions : []) : null
+    },
+    userRoles (state) {
+      return state.user ? (Array.isArray(state.user.roles) ? state.user.roles : []) : null
     }
   },
   mutations: {
@@ -31,6 +38,7 @@ export default new Vuex.Store({
       state.user = user
       if (user) {
         localStorage.user = JSON.stringify(user)
+        state.menus = filterMenus(menuRouters)
       } else {
         localStorage.removeItem('user')
       }
@@ -55,16 +63,31 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    doUserLogin ({ commit }) {
+    doUserLogin ({ commit }, loginData) {
       // TODO: 用户登录请求
-      let user = {
-        name: '系统管理员',
-        nickname: '机智的绿豆蛙',
-        avatar: 'http://cnscoo.cc/static/img/logo.3dd67de.jpg',
-        token: '4JDRIJGGDO8TFBDIKFGMG0W3R',
-        roles: ['ADMIN', 'MEMBER'],
-        authorizes: ['ADMIN', 'USER', 'ACTIVIES'],
-        lastlogin: 1542185049718
+      let user
+      if (loginData.username === 'admin') {
+        user = {
+          name: '系统管理员',
+          nickname: '机智的绿豆蛙',
+          avatar: 'http://cnscoo.cc/static/img/logo.3dd67de.jpg',
+          token: '4JDRIJGGDO8TFBDIKFGMG0W3R',
+          roles: ['ADMIN', 'MEMBER'],
+          permissions: ['ADMIN', 'USER', 'ACTIVIES'],
+          lastlogin: 1542185049718
+        }
+      } else if (loginData.username === 'user') {
+        user = {
+          name: '平台用户',
+          nickname: '愚蠢的绿豆蛙',
+          avatar: 'http://cnscoo.cc/static/favicon.png',
+          token: 'I9EN3OE5NRHB0RKTPDRITJ389F',
+          roles: ['MEMBER'],
+          permissions: ['USER', 'ACTIVIES'],
+          lastlogin: 1542185067554
+        }
+      } else {
+        return Promise.reject(new Error('错误的用户名或密码'))
       }
       commit('setUser', user)
       return Promise.resolve(user)
