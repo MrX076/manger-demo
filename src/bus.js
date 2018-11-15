@@ -37,46 +37,47 @@ export const isRole = value => {
   return userRoles.some(i => roles.includes(i))
 }
 
-router.beforeEach((to, from, next) => {
-  // TODO: 目标页面权限检查
-  let user = store.state.user
-  if (to.name === 'Login' && user) {
-    next({ name: 'Home' })
-    return
-  }
-  const meta = to.meta
-  // 检查用户登录
-  if (!user && (!meta || meta.auth !== false)) {
-    if (localStorage.user) {
-      try {
-        user = JSON.parse(localStorage.user)
-        store.commit('setUser', user)
-      } catch (e) {
-        console.log(e)
-        localStorage.removeItem('user')
-      }
+export const beforeAppCreate = () => {
+  // 如果存在用户登录信息
+  if (localStorage.user) {
+    try {
+      const user = JSON.parse(localStorage.user)
+      store.commit('setUser', user)
+    } catch (e) {
+      console.log(e)
+      localStorage.removeItem('user')
     }
-    if (!user) {
+  }
+  // 路由跳转拦截
+  router.beforeEach((to, from, next) => {
+    let user = store.state.user
+    if (to.name === 'Login' && user) {
+      next({ name: 'Home' })
+      return
+    }
+    const meta = to.meta
+    // 检查用户登录
+    if (!user && (!meta || meta.auth !== false) && to.name !== 'Login') {
       next({ name: 'Login' })
       return
     }
-  }
-  // 检查用户权限
-  if (user && (!isRole(meta.roles) || !hasPermission(meta.permissions))) {
-    next({ name: 'E403' })
-    return
-  }
-  // 浏览器标题显示
-  if (meta && meta.title) {
-    document.title = '管理平台 - ' + meta.title
-  } else {
-    document.title = '管理平台'
-  }
-  if (!meta || !meta.noTab) {
-    store.commit('openRoute', to)
-  }
-  next()
-})
+    // 检查用户权限
+    if (user && (!isRole(meta.roles) || !hasPermission(meta.permissions))) {
+      next({ name: 'E403' })
+      return
+    }
+    // 浏览器标题显示
+    if (meta && meta.title) {
+      document.title = '管理平台 - ' + meta.title
+    } else {
+      document.title = '管理平台'
+    }
+    if (!meta || !meta.noTab) {
+      store.commit('openRoute', to)
+    }
+    next()
+  })
+}
 
 // 菜单过滤
 export const filterMenus = menus => {
@@ -87,12 +88,12 @@ export const filterMenus = menus => {
     let permissions = (m.meta && m.meta.permissions) || []
     if (auth && isRole(roles) && hasPermission(permissions)) {
       if (m.children && m.children.length) {
-        m.children = filterMenus(m.children)
-        if (m.children.length) {
-          ms.push(m)
+        let children = filterMenus(m.children)
+        if (children.length) {
+          ms.push({ name: m.name, path: m.path, meta: m.meta, children })
         }
       } else {
-        ms.push(m)
+        ms.push({ name: m.name, path: m.path, meta: m.meta })
       }
     }
   }

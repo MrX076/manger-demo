@@ -56,19 +56,31 @@ function filterComponentRouter (routers) {
   return rs
 }
 
+let layoutChildren = []
+// 单独提出，方便动态添加路由
+export const layoutRoute = {
+  path: '',
+  name: 'Layout',
+  component: Layout,
+  redirect: '/',
+  set children (menus) {
+    layoutChildren = filterComponentRouter(menus)
+  },
+  get children () {
+    return layoutChildren
+  }
+}
+// 动态添加时，此处不赋值
+layoutRoute.children = menuRouters
+
 export default new Router({
   // mode: 'history',
   base: process.env.BASE_URL,
   scrollBehavior: () => ({ y: 0 }),
   routes: [
     ...otherRouters,
+    layoutRoute,
     {
-      path: '',
-      name: 'Layout',
-      redirect: '/',
-      component: Layout,
-      children: filterComponentRouter(menuRouters)
-    }, {
       path: '*',
       name: 'E404',
       component: () => import(/* webpackChunkName: "error" */ './views/errors/E404'),

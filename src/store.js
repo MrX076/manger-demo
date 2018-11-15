@@ -31,15 +31,13 @@ export default new Vuex.Store({
     togglerMenuCollapse (state) {
       state.menuCollapse = !state.menuCollapse
     },
-    setMenus (state, menus) {
-      state.menus = menus
-    },
     setUser (state, user) {
       state.user = user
       if (user) {
         localStorage.user = JSON.stringify(user)
         state.menus = filterMenus(menuRouters)
       } else {
+        state.openTabs = []
         localStorage.removeItem('user')
       }
     },

@@ -3,7 +3,7 @@
     <div class="login-block">
       <h5>用户登录</h5>
       <div class="login-block-info">
-        <el-form ref="loginForm" :rules="loginDataRule" :model="loginData" size="small">
+        <el-form ref="loginForm" :rules="loginDataRule" :model="loginData" size="small" @keypress.native.enter="doLogin">
           <el-form-item prop="username">
             <el-input v-model="loginData.username" placeholder="请输入帐号">
               <template slot="prepend"><i class="fas fa-user"></i></template>
