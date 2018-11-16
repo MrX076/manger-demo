@@ -30,7 +30,6 @@ _axios.interceptors.request.use(
     return config
   },
   function (error) {
-    console.log(error.request)
     showError('请求发生错误')
     return Promise.reject(error)
   }
@@ -42,7 +41,6 @@ _axios.interceptors.response.use(
     if (data && data.status === 'SUCCESS') {
       return data.content
     }
-    console.log(data)
     if (data) {
       if (response.config.showMessage !== false) {
         showError(data ? `Code: ${data.errorCode} - Message: ${data.errorMsg}` : '发生错误，但服务器未返回任何内容')
@@ -57,7 +55,6 @@ _axios.interceptors.response.use(
   },
   function (error) {
     if (error.response) {
-      console.log(error.response)
       showError(`ServerError: Status=${error.response.status}, Text=${error.response.statusText}`)
     } else {
       showError('网络连接错误！')

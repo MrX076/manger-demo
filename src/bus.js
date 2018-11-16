@@ -44,7 +44,6 @@ export const beforeAppCreate = () => {
       const user = JSON.parse(localStorage.user)
       store.commit('setUser', user)
     } catch (e) {
-      console.log(e)
       localStorage.removeItem('user')
     }
   }
