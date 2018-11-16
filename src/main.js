@@ -5,10 +5,10 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './plugins/element.js'
-import { beforeAppCreate, eventBus, authDirectives } from './bus'
+import { beforeAppCreate, eventBus } from './bus'
+import './directives/auth'
 
 Vue.config.productionTip = false
-Vue.use(authDirectives)
 
 const app = store._vm
 eventBus(app)
